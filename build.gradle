@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id "com.github.node-gradle.node" version "7.0.2" // Node plugin hinzugefügt
+}
+
+group = 'com.sherifKhamis'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Node plugin Konfiguration hinzugefügt
+node {
+    version = '20.11.1' // Du kannst hier deine bevorzugte Node-Version angeben
+    npmVersion = '10.2.4' // Du kannst hier deine bevorzugte npm-Version angeben
+    workDir = file("${project.projectDir}/src/main/frontend/sudoku")
+    npmInstallCommand = "install"
+    nodeProjectDir = file("${project.projectDir}/src/main/frontend/sudoku")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Frontend Build-Tasks hinzugefügt
+task npmBuild(type: NpmTask, dependsOn: npmInstall) {
+    args = ['run', 'build']
+}
+
+// Sicherstellen, dass das Frontend gebaut wird, bevor die Ressourcen verarbeitet werden
+tasks.named('processResources') {
+    dependsOn npmBuild
+}
+
+// Die gebauten Frontend-Dateien in das JAR einbinden
+bootJar {
+    dependsOn npmBuild
+    from ("${project.projectDir}/src/main/frontend/sudoku/dist") {
+        into 'BOOT-INF/classes/static'
+    }
+}
+
+// Für die Entwicklung: Frontend-Dateien in build/resources/main/static kopieren
+processResources {
+    from ("${project.projectDir}/src/main/frontend/sudoku/dist") {
+        into 'static'
+    }
+}

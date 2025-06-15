@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Sudoku" type="CompoundRunConfigurationType">
+    <toRun name="Backend" type="GradleRunConfiguration" />
+    <toRun name="Frontend" type="GradleRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

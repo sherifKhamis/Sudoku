@@ -22,7 +22,7 @@ repositories {
 node {
     version = '20.11.1' // Du kannst hier deine bevorzugte Node-Version angeben
     download = true // Hinzugefügt, um den Download von Node/npm zu erzwingen
-    workDir = file("${project.buildDir}/node") // Geändert von src/main/frontend/sudoku
+    workDir = layout.buildDirectory.dir('node').get().asFile // Geändert von file("${project.buildDir}/node")
     npmInstallCommand = "install"
     nodeProjectDir = file("${project.projectDir}/src/main/frontend/sudoku")
 }
@@ -61,4 +61,37 @@ processResources {
     from ("${project.projectDir}/src/main/frontend/sudoku/dist") {
         into 'static'
     }
+}
+
+// Neue Task für den Frontend-Entwicklungsserver hinzufügen
+tasks.register('npmServe', NpmTask) {
+    group = 'development'
+    description = 'Startet den Vue.js Frontend-Entwicklungsserver (npm run serve) und öffnet ihn im Browser.'
+    args = ['run', 'serve', '--', '--open'] // Hinzugefügt: '--', '--open'
+    // Diese Task verwendet die 'nodeProjectDir'-Einstellung aus dem 'node'-Block.
+    // Die Task blockiert das Terminal, in dem sie ausgeführt wird.
+}
+
+// Task zum gleichzeitigen Starten von Backend und Frontend
+tasks.register('startDev') {
+    group = 'development'
+    description = 'Startet das Spring Boot Backend und den Vue.js Frontend Entwicklungsserver.'
+    dependsOn bootRun, npmServe
+
+    // Da bootRun und npmServe blockierende Tasks sind und parallel laufen sollen,
+    // müssen wir sie so konfigurieren, dass sie in separaten Prozessen gestartet werden.
+    // Gradle führt abhängige Tasks standardmäßig sequenziell aus.
+    // Für eine echte parallele Ausführung, die von einem einzigen Klick in IntelliJ IDEA ausgelöst wird,
+    // ist es am besten, IntelliJ IDEA so zu konfigurieren, dass es beide Konfigurationen (bootRun und npmServe)
+    // als "Compound" Run Configuration startet oder zwei separate Gradle-Run-Konfigurationen erstellt
+    // und diese manuell startet.
+
+    // Diese kombinierte Task dient hier eher als logische Gruppierung.
+    // Für die tatsächliche parallele Ausführung in IntelliJ:
+    // 1. Erstellen Sie eine Run Configuration für 'bootRun'.
+    // 2. Erstellen Sie eine Run Configuration für 'npmServe'.
+    // 3. Erstellen Sie eine "Compound" Run Configuration, die diese beiden ausführt.
+    // Alternativ können Sie die Tasks manuell in separaten Terminals starten:
+    // ./gradlew bootRun
+    // ./gradlew npmServe
 }

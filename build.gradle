@@ -10,7 +10,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(24)
     }
 }
 
@@ -21,16 +21,16 @@ repositories {
 // Node plugin Konfiguration hinzugefügt
 node {
     version = '20.11.1' // Du kannst hier deine bevorzugte Node-Version angeben
-    npmVersion = '10.2.4' // Du kannst hier deine bevorzugte npm-Version angeben
-    workDir = file("${project.projectDir}/src/main/frontend/sudoku")
+    download = true // Hinzugefügt, um den Download von Node/npm zu erzwingen
+    workDir = file("${project.buildDir}/node") // Geändert von src/main/frontend/sudoku
     npmInstallCommand = "install"
     nodeProjectDir = file("${project.projectDir}/src/main/frontend/sudoku")
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
 tasks.named('test') {
@@ -38,7 +38,8 @@ tasks.named('test') {
 }
 
 // Frontend Build-Tasks hinzugefügt
-task npmBuild(type: NpmTask, dependsOn: npmInstall) {
+tasks.register('npmBuild', NpmTask) {
+    dependsOn npmInstall
     args = ['run', 'build']
 }
 
